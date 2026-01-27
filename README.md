@@ -16,13 +16,6 @@ This code is written for Python 3 and it was tested on version 3.5.  Run the fol
     
 The first parameter can be either GENERIC, LINK_STATE, or DISTANCE_VECTOR.  The second parameter specifies the input file.
 
-### Running on Murphy:
-
-For CS-340, if you choose to run your code on the old murphy.wot.eecs.northwestern.edu machine then you can run the following commands to use Python 3.5.  However, a better choice would be using the newer machine moore.wot.eecs.northwestern.edu.
-
-    $ scl enable rh-python35 bash
-    $ pip install --user matplotlib networkx
-    $ python3 sim.py GENERIC demo.event 
     
 ### Functions provide in Node class
     0. send_to_neighbors(m)  // send message to neighbors
