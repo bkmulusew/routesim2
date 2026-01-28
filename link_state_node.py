@@ -45,15 +45,12 @@ class Link_State_Node(Node):
 
     def link_has_been_updated(self, neighbor, latency):
         # latency = -1 if delete a link
-        try:
-            neighbor = int(neighbor)
-        except Exception:
-            return
+        neighbor = int(neighbor)
 
         if latency == -1:
             self.neighbor_lat.pop(neighbor, None)
         else:
-            self.neighbor_lat[neighbor] = int(latency)
+            self.neighbor_lat[neighbor] = float(latency)
 
         # Originate and flood a new LSA, then recompute routes
         self._originate_and_flood_lsa()
@@ -63,19 +60,13 @@ class Link_State_Node(Node):
         Receives an LSA (JSON string). If it's newer than what we have for that origin,
         install it, flood it onward, and recompute routes.
         """
-        try:
-            msg = json.loads(m)
-        except Exception:
-            return
+        msg = json.loads(m)
 
         if not isinstance(msg, dict) or msg.get("type") != "LSA":
             return
 
-        try:
-            origin = int(msg["origin"])
-            incoming_seq = int(msg["seq"])
-        except Exception:
-            return
+        origin = int(msg["origin"])
+        incoming_seq = int(msg["seq"])
 
         # Don't re-process our own LSAs received back
         if origin == self.id:
@@ -87,21 +78,15 @@ class Link_State_Node(Node):
         # JSON keys become strings; convert back to int
         if isinstance(raw_neighbors, dict):
             for k, v in raw_neighbors.items():
-                try:
-                    nk = int(k)
-                    nv = int(v)
-                except Exception:
-                    continue
+                nk = int(k)
+                nv = int(v)
                 if nv >= 0:
                     incoming_neighbors[nk] = nv
 
         current = self.lsdb.get(origin)
         if current is not None:
-            try:
-                if incoming_seq <= int(current.get("seq", -1)):
-                    return  # old/duplicate
-            except Exception:
-                pass
+            if incoming_seq <= int(current.get("seq", -1)):
+                return  # old/duplicate
 
         # Install
         self.lsdb[origin] = {"seq": incoming_seq, "neighbors": incoming_neighbors}
@@ -113,10 +98,7 @@ class Link_State_Node(Node):
         self._recompute_routes()
 
     def get_next_hop(self, destination):
-        try:
-            destination = int(destination)
-        except Exception:
-            return -1
+        destination = int(destination)
 
         if destination == self.id:
             return self.id
@@ -130,7 +112,7 @@ class Link_State_Node(Node):
             "origin": self.id,
             "seq": self.seq,
             # JSON keys must be strings
-            "neighbors": {str(nbr): int(lat) for nbr, lat in self.neighbor_lat.items()},
+            "neighbors": {str(nbr): float(lat) for nbr, lat in self.neighbor_lat.items()},
         }
 
         # Install our own latest into LSDB
@@ -159,21 +141,15 @@ class Link_State_Node(Node):
             adj[v][u] = w
 
         for origin, rec in self.lsdb.items():
-            try:
-                u = int(origin)
-            except Exception:
-                continue
+            u = int(origin)
 
             neighbors = rec.get("neighbors", {})
             if not isinstance(neighbors, dict):
                 continue
 
             for nbr, lat in neighbors.items():
-                try:
-                    v = int(nbr)
-                    w = int(lat)
-                except Exception:
-                    continue
+                v = int(nbr)
+                w = int(lat)
                 if w >= 0:
                     add_edge(u, v, w)
 
