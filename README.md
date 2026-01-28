@@ -16,12 +16,24 @@ This code is written for Python 3 and it was tested on version 3.5.  Run the fol
     
 The first parameter can be either GENERIC, LINK_STATE, or DISTANCE_VECTOR.  The second parameter specifies the input file.
 
-    
-### Functions provide in Node class
-    0. send_to_neighbors(m)  // send message to neighbors
-    1. send_to_neighbor(neighbor, m) // send message to a neighbor
-    2. get_time()  // get current simulator time
-    3. link_has_been_updated() // will be called by simulator after processing every event in that second.
+### Routing Algorithm Implementations:
+
+#### LINK_STATE
+
+The Link-State implementation (`link_state_node.py`) uses the link-state routing protocol:
+
+- **Link-State Database (LSDB):** Each node maintains a database containing the complete network topology as learned from Link-State Advertisements (LSAs).
+- **LSA Flooding:** When a node's local links change, it originates a new LSA with an incremented sequence number and floods it to all neighbors. Nodes forward new LSAs they receive (based on sequence number freshness) to prevent duplicates.
+- **Dijkstra's Algorithm:** After any LSDB update, the node runs Dijkstra's shortest-path algorithm on the merged graph to compute the routing table (next-hop for each destination).
+
+#### DISTANCE_VECTOR
+
+The Distance-Vector implementation (`distance_vector_node.py`) uses a path-vector variant of the Bellman-Ford algorithm:
+
+- **Distance Vectors with Paths:** Each node maintains its best-known cost and full path to every destination, sharing this information with neighbors.
+- **Loop Prevention:** Uses path vectors to detect loops. If a node sees itself in an advertised path, it rejects that route. This prevents the ***count-to-infinity problem.***
+- **Triggered Updates:** When routes change (due to link updates or received advertisements), the node recomputes its routes and broadcasts updates only if changes occurred.
+- **Route Selection:** Prefers lower cost; ties are broken by shorter path length, then smaller next-hop ID for stability.
 
 ### Event commands:
      0. # [comment]
