@@ -20,6 +20,7 @@ class Distance_Vector_Node(Node):
 
         self.neighbor_lat = {}       # neighbor -> latency
         self.neighbor_routes = {}    # neighbor -> advertised route map
+        self.neighbor_last_update = {}  # neighbor -> last time we received an update
 
         # Our selected routes: dest -> dict(cost, next, path)
         self.routes = {
@@ -46,6 +47,7 @@ class Distance_Vector_Node(Node):
         if latency == -1:
             self.neighbor_lat.pop(neighbor, None)
             self.neighbor_routes.pop(neighbor, None)
+            self.neighbor_last_update.pop(neighbor, None)
         else:
             self.neighbor_lat[neighbor] = latency
 
@@ -84,7 +86,20 @@ class Distance_Vector_Node(Node):
 
             parsed[d] = {"cost": cost, "path": path}
 
-        self.neighbor_routes[origin] = parsed
+        # Handle out-of-order message delivery at the same simulation time
+        current_time = self.get_time()
+        last_update_time = self.neighbor_last_update.get(origin, -1)
+        old_routes = self.neighbor_routes.get(origin, {})
+        
+        if current_time == last_update_time and len(parsed) < len(old_routes):
+            # Same time as last update but fewer routes - likely an older message
+            # arriving out of order due to heap scheduling. Merge to keep more info.
+            self.neighbor_routes[origin] = {**old_routes, **parsed}
+        else:
+            # Different time (newer message) or more routes - trust this message
+            self.neighbor_routes[origin] = parsed
+        
+        self.neighbor_last_update[origin] = current_time
 
         changed = self._recompute_routes()
         if changed:

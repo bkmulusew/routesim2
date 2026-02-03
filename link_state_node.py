@@ -49,6 +49,7 @@ class Link_State_Node(Node):
 
         if latency == -1:
             self.neighbor_lat.pop(neighbor, None)
+            self.lsdb.pop(neighbor, None)
         else:
             self.neighbor_lat[neighbor] = float(latency)
 
